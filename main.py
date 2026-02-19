@@ -73,6 +73,46 @@ def backtest(df: pd.DataFrame) -> tuple[dict, pd.DataFrame]:
     }, df
 
 
+def predict_next(df: pd.DataFrame, days_ahead: int = 5) -> pd.DataFrame:
+    feature_cols = ["Close", "SMA_20", "SMA_50", "EMA_12", "EMA_26", "MACD", "Signal", "RSI"]
+    df_model = df.dropna().copy()
+
+    for lag in range(1, 6):
+        df_model[f"Close_lag_{lag}"] = df_model["Close"].shift(lag)
+    df_model = df_model.dropna()
+
+    X = df_model[feature_cols + [f"Close_lag_{lag}" for lag in range(1, 6)]]
+    y = df_model["Close"]
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=False, test_size=0.2)
+
+    model = LinearRegression()
+    model.fit(X_train, y_train)
+
+    preds = []
+    last_row = df_model.iloc[-1].copy()
+    for _ in range(days_ahead):
+        features = last_row[feature_cols + [f"Close_lag_{lag}" for lag in range(1, 6)]].values.reshape(1, -1)
+        pred = model.predict(features)[0]
+        preds.append(pred)
+
+        for lag in range(5, 1, -1):
+            last_row[f"Close_lag_{lag}"] = last_row[f"Close_lag_{lag-1}"]
+        last_row["Close_lag_1"] = pred
+        last_row["Close"] = pred
+
+        last_row["SMA_20"] = df["Close"].tail(19).mean() * 0.95 + pred * 0.05
+        last_row["SMA_50"] = df["Close"].tail(49).mean() * 0.98 + pred * 0.02
+        last_row["EMA_12"] = (pred * (2 / (12 + 1))) + (last_row["EMA_12"] * (1 - (2 / (12 + 1))))
+        last_row["EMA_26"] = (pred * (2 / (26 + 1))) + (last_row["EMA_26"] * (1 - (2 / (26 + 1))))
+        last_row["MACD"] = last_row["EMA_12"] - last_row["EMA_26"]
+        last_row["Signal"] = (last_row["MACD"] * (2 / (9 + 1))) + (last_row["Signal"] * (1 - (2 / (9 + 1))))
+        last_row["RSI"] = last_row["RSI"]
+
+    future_dates = [df.index[-1] + timedelta(days=i) for i in range(1, days_ahead + 1)]
+    return pd.DataFrame({"Date": future_dates, "Predicted_Close": preds})
+
+
 def plot_charts(df: pd.DataFrame, ticker: str) -> None:
     plt.figure(figsize=(12, 6))
     plt.plot(df.index, df["Close"], label="Close", linewidth=1.5)
@@ -116,55 +156,8 @@ def plot_charts(df: pd.DataFrame, ticker: str) -> None:
         plt.show()
 
 
-def predict_next(df: pd.DataFrame, days_ahead: int = 5) -> pd.DataFrame:
-    feature_cols = ["Close", "SMA_20", "SMA_50", "EMA_12", "EMA_26", "MACD", "Signal", "RSI"]
-    df_model = df.dropna().copy()
-
-    # Create lag features
-    for lag in range(1, 6):
-        df_model[f"Close_lag_{lag}"] = df_model["Close"].shift(lag)
-    df_model = df_model.dropna()
-
-    X = df_model[feature_cols + [f"Close_lag_{lag}" for lag in range(1, 6)]]
-    y = df_model["Close"]
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y, shuffle=False, test_size=0.2)
-
-    model = LinearRegression()
-    model.fit(X_train, y_train)
-
-    # Iterative prediction
-    preds = []
-    last_row = df_model.iloc[-1].copy()
-    for _ in range(days_ahead):
-        features = last_row[feature_cols + [f"Close_lag_{lag}" for lag in range(1, 6)]].values.reshape(1, -1)
-        pred = model.predict(features)[0]
-        preds.append(pred)
-
-        # update lag features
-        for lag in range(5, 1, -1):
-            last_row[f"Close_lag_{lag}"] = last_row[f"Close_lag_{lag-1}"]
-        last_row["Close_lag_1"] = pred
-        last_row["Close"] = pred
-
-        # recompute indicators naively using last values
-        last_row["SMA_20"] = df["Close"].tail(19).mean() * 0.95 + pred * 0.05
-        last_row["SMA_50"] = df["Close"].tail(49).mean() * 0.98 + pred * 0.02
-        last_row["EMA_12"] = (pred * (2 / (12 + 1))) + (last_row["EMA_12"] * (1 - (2 / (12 + 1))))
-        last_row["EMA_26"] = (pred * (2 / (26 + 1))) + (last_row["EMA_26"] * (1 - (2 / (26 + 1))))
-        last_row["MACD"] = last_row["EMA_12"] - last_row["EMA_26"]
-        last_row["Signal"] = (last_row["MACD"] * (2 / (9 + 1))) + (last_row["Signal"] * (1 - (2 / (9 + 1))))
-        last_row["RSI"] = last_row["RSI"]  # keep last RSI for simplicity
-
-    future_dates = [df.index[-1] + timedelta(days=i) for i in range(1, days_ahead + 1)]
-    return pd.DataFrame({"Date": future_dates, "Predicted_Close": preds})
-
-
 def main():
-    ticker = input("Enter stock ticker (e.g., AAPL): ").strip().upper()
-    if not ticker:
-        print("Ticker is required.")
-        return
+    ticker = "GOOGL"
 
     df = fetch_last_356_days(ticker)
     df = add_indicators(df)
