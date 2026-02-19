@@ -2,7 +2,7 @@
 
 A simple, single-file Python app that:
 
--   Pulls the last \~356 trading days of stock data
+-   Pulls the last \~356 trading days of **Google (GOOGL)** stock data
 -   Calculates basic technical indicators (SMA, EMA, RSI, MACD)
 -   Generates buy/sell signals
 -   Backtests a simple rule-based strategy
@@ -25,7 +25,7 @@ A simple, single-file Python app that:
 
 ## Installation
 
-``` powershell
+```powershell
 pip install yfinance pandas numpy scikit-learn matplotlib
 ```
 
@@ -33,7 +33,7 @@ pip install yfinance pandas numpy scikit-learn matplotlib
 
 ## Run
 
-``` powershell
+```powershell
 python main.py
 ```
 
@@ -44,7 +44,7 @@ accordingly.
 
 ## What It Does
 
-1.  Downloads historical stock data using `yfinance`
+1.  Downloads historical **Google (GOOGL)** stock data using `yfinance`
 2.  Computes technical indicators:
     -   20 & 50 Day Simple Moving Averages (SMA)
     -   12 & 26 Day Exponential Moving Averages (EMA)
