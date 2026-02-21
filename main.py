@@ -35,13 +35,15 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["MACD"] = df["EMA_12"] - df["EMA_26"]
     df["Signal"] = df["MACD"].ewm(span=9, adjust=False).mean()
 
-    delta = df["Close"].diff().fillna(0)
+    delta = df["Close"].diff()
     gain = (delta.where(delta > 0, 0)).rolling(14).mean()
     loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
     rs = gain / loss.replace(0, np.nan)
     df["RSI"] = 100 - (100 / (1 + rs))
-    obv_volume = np.where(delta > 0, df["Volume"], np.where(delta < 0, -df["Volume"], 0))
-    df["OBV"] = pd.Series(obv_volume, index=df.index).cumsum()
+    obv_volume = pd.Series(0, index=df.index, dtype="float64")
+    obv_volume[delta > 0] = df.loc[delta > 0, "Volume"]
+    obv_volume[delta < 0] = -df.loc[delta < 0, "Volume"]
+    df["OBV"] = obv_volume.cumsum()
 
     return df
 
