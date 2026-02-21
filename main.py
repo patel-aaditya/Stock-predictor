@@ -40,8 +40,8 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
     rs = gain / loss.replace(0, np.nan)
     df["RSI"] = 100 - (100 / (1 + rs))
-    obv_direction = np.sign(delta).fillna(0)
-    df["OBV"] = (obv_direction * df["Volume"].fillna(0)).cumsum()
+    obv_volume = np.where(delta > 0, df["Volume"], np.where(delta < 0, -df["Volume"], 0))
+    df["OBV"] = pd.Series(obv_volume, index=df.index).cumsum()
 
     return df
 
