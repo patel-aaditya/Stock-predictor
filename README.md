@@ -3,7 +3,7 @@
 A simple, single-file Python app that:
 
 -   Pulls the last \~356 trading days of **Google (GOOGL)** stock data
--   Calculates basic technical indicators (SMA, EMA, RSI, MACD)
+-   Calculates basic technical indicators (SMA, EMA, RSI, MACD, OBV)
 -   Generates buy/sell signals
 -   Backtests a simple rule-based strategy
 -   Predicts the next 5 days of prices using Linear Regression
@@ -50,6 +50,7 @@ accordingly.
     -   12 & 26 Day Exponential Moving Averages (EMA)
     -   MACD (Momentum Indicator)
     -   RSI (Relative Strength Index)
+    -   OBV (On-Balance Volume)
 3.  Generates trading signals based on SMA crossover + RSI filter
 4.  Backtests strategy performance vs Buy & Hold
 5.  Trains a Linear Regression model

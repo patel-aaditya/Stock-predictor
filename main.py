@@ -40,6 +40,8 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
     rs = gain / loss.replace(0, np.nan)
     df["RSI"] = 100 - (100 / (1 + rs))
+    obv_direction = np.sign(delta).fillna(0)
+    df["OBV"] = (obv_direction * df["Volume"].fillna(0)).cumsum()
 
     return df
 
@@ -145,6 +147,14 @@ def plot_charts(df: pd.DataFrame, ticker: str) -> None:
     plt.legend()
     plt.tight_layout()
     plt.show()
+
+    if "OBV" in df.columns:
+        plt.figure(figsize=(12, 4))
+        plt.plot(df.index, df["OBV"], label="OBV", color="purple")
+        plt.title(f"{ticker} OBV")
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
 
     if "Equity" in df.columns and "BuyHoldEquity" in df.columns:
         plt.figure(figsize=(12, 4))
