@@ -35,7 +35,7 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["MACD"] = df["EMA_12"] - df["EMA_26"]
     df["Signal"] = df["MACD"].ewm(span=9, adjust=False).mean()
 
-    delta = df["Close"].diff()
+    delta = df["Close"].diff().fillna(0)
     gain = (delta.where(delta > 0, 0)).rolling(14).mean()
     loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
     rs = gain / loss.replace(0, np.nan)
