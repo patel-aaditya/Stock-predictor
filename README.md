@@ -2,7 +2,12 @@
 
 A single-file Python app that downloads historical stock data for **IRFC.NS** (Indian Railway Finance Corporation) and performs multi-indicator technical analysis, signal generation, and rolling accuracy evaluation — all visualised in dark-themed Matplotlib charts.
 
----
+-   Pulls the last \~356 trading days of **Google (GOOGL)** stock data
+-   Calculates basic technical indicators (SMA, EMA, RSI, MACD, OBV)
+-   Generates buy/sell signals
+-   Backtests a simple rule-based strategy
+-   Predicts the next 5 days of prices using Linear Regression
+-   Plots charts using Matplotlib
 
 ## What It Does
 
@@ -66,10 +71,18 @@ Make sure your script file is named `main.py`, or update the command accordingly
 
 ## Project Structure
 
-```
-Stock-predictor/
-└── main.py   # Single-file app — all logic lives here
-```
+1.  Downloads historical **Google (GOOGL)** stock data using `yfinance`
+2.  Computes technical indicators:
+    -   20 & 50 Day Simple Moving Averages (SMA)
+    -   12 & 26 Day Exponential Moving Averages (EMA)
+    -   MACD (Momentum Indicator)
+    -   RSI (Relative Strength Index)
+    -   OBV (On-Balance Volume)
+3.  Generates trading signals based on SMA crossover + RSI filter
+4.  Backtests strategy performance vs Buy & Hold
+5.  Trains a Linear Regression model
+6.  Forecasts the next 5 days of prices
+7.  Visualizes results with charts
 
 ---
 
